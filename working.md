@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T23:49:53Z
+Last updated: 2026-04-04T23:52:25Z
 
 ## Session Info
 Device: Linux Mint (Phase 2)
@@ -24,8 +24,10 @@ Model: Claude Opus 4.6 (Thinking)
 
 ## Completed and Verified — Phase 2
 - backend/services/__init__.py → Package init ✅
-- backend/services/llm_client.py → async analyze_findings + health_check, OpenRouter via openai SDK, fallback handling, grep checks passed ✅
-- backend/services/github_service.py → async create_patch_pr + health_check, PyGithub via run_in_executor, branch naming scar-patch-{timestamp}, error fallback, grep checks passed ✅
+- backend/services/llm_client.py → async analyze_findings + health_check, OpenRouter via openai SDK, fallback handling ✅
+- backend/services/github_service.py → async create_patch_pr + health_check, PyGithub via run_in_executor, error fallback ✅
+- backend/pipelines/__init__.py → Package init ✅
+- backend/pipelines/blue_team.py → async SSE generator run_blue_team, wires LLM → GitHub PR, full error handling at every step, grep checks passed ✅
 
 ## Next File
 (Waiting for next Phase 2 instruction — likely FastAPI routes or remaining tool runners)
