@@ -1,0 +1,5 @@
+scar-demo-target/venv/
+__pycache__/
+*.pyc
+.env
+*.egg-info/
