@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T18:14:32Z
+Last updated: 2026-04-04T19:32:36Z
 
 ## Session Info
 Device: Linux Mint (Phase 1)
@@ -11,13 +11,17 @@ Model: Gemini 3.1 Pro (High)
 - scar-demo-target/static/bundle.js → sk_live_ key confirmed via curl fetch ✅
 - scar-demo-target/Dockerfile → Built successfully ✅
 - docker-compose.yml → Built and deployed two containers (demo-target, scar-backend) on custom network scar-net ✅
+- nuclei-templates/stripe-key.yaml → Created and tested ✅
+- nuclei-templates/xss-login.yaml → Created and tested ✅
+- nuclei-templates/debug-traceback.yaml → Created and tested ✅
 
 ## Next File
-(Waiting for next file instruction: Expected Nuclei v3 YAML templates)
+(Waiting for next instruction on tool runners)
 
 ## Errors Hit and Fixed
-- Failed to create python `venv` because `python3.12-venv` was missing. Fixed by using user installation: `python3 -m pip install flask --break-system-packages`.
+- Failed to create python `venv` because `python3.12-venv` was missing. Fixed by using user installation.
 - Push to GitHub blocked by push protection (Stripe API Key in bundle.js). Kept intentional and reported to the user.
+- Nuclei docker image `v3.3.7` not found, used `v3.3.8`. Docker-compose generated `scar_scar-net` instead of `scar-net`, adjusted the network name in the docker run command to `scar_scar-net`.
 
 ## Docker State
 Docker compose is UP.
@@ -26,4 +30,8 @@ Containers live:
 - demo-target (scar-demo-target with ports 0.0.0.0:5000->5000/tcp)
 
 ## Nuclei Test State
-0 findings returned. 0 times tested.
+3 findings returned:
+1. `reflected-xss-login`
+2. `stripe-live-key-exposed`
+3. `flask-debug-traceback`
+Tested exactly 1 time.

@@ -1,0 +1,16 @@
+id: reflected-xss-login
+info:
+  name: Reflected XSS in Login Endpoint
+  author: scar
+  severity: high
+  tags: xss,reflected
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/v1/login?username=<script>alert(1)</script>"
+    matchers:
+      - type: word
+        words:
+          - "<script>alert(1)</script>"
+        part: body
