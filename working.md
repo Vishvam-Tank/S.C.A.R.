@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T19:37:36Z
+Last updated: 2026-04-04T19:41:11Z
 
 ## Session Info
 Device: Linux Mint (Phase 1)
@@ -17,6 +17,8 @@ Model: Gemini 3.1 Pro (High)
 - fallback-cache/stripe-key.json → Created and verified as valid JSON ✅
 - fallback-cache/xss-login.json → Created and verified as valid JSON ✅
 - fallback-cache/debug-traceback.json → Created and verified as valid JSON ✅
+- backend/tools/nuclei_runner.py → Python syntactic verification completed. Uses fallback-cache strictly on empty result ✅
+- backend/tools/__init__.py → Package instantiated ✅
 
 ## Next File
 (Waiting for next instruction on tool runners)
@@ -25,6 +27,7 @@ Model: Gemini 3.1 Pro (High)
 - Failed to create python `venv` because `python3.12-venv` was missing. Fixed by using user installation.
 - Push to GitHub blocked by push protection (Stripe API Key in bundle.js). Kept intentional and reported to the user.
 - Nuclei docker image `v3.3.7` not found, used `v3.3.8`. Docker-compose generated `scar_scar-net` instead of `scar-net`, adjusted the network name in the docker run command to `scar_scar-net`.
+- `__init__.py` file write failed initially because `CodeContent` was empty strings; supplied it with `# Init` to solve it.
 
 ## Docker State
 Docker compose is UP.
