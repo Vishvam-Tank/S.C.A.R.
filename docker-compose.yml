@@ -9,14 +9,21 @@ services:
       - scar-net
     restart: unless-stopped
 
-  backend:
-    image: python:3.11-slim
+  scar-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: scar-backend
-    working_dir: /app
-    volumes:
-      - ./backend:/app
     networks:
       - scar-net
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - ./nuclei-templates:/app/nuclei-templates
+      - ./fallback-cache:/app/fallback-cache
+    depends_on:
+      - demo-target
     command: tail -f /dev/null
     restart: unless-stopped
 
