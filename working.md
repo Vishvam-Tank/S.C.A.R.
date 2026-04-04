@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T23:52:25Z
+Last updated: 2026-04-04T23:54:58Z
 
 ## Session Info
 Device: Linux Mint (Phase 2)
@@ -27,10 +27,12 @@ Model: Claude Opus 4.6 (Thinking)
 - backend/services/llm_client.py → async analyze_findings + health_check, OpenRouter via openai SDK, fallback handling ✅
 - backend/services/github_service.py → async create_patch_pr + health_check, PyGithub via run_in_executor, error fallback ✅
 - backend/pipelines/__init__.py → Package init ✅
-- backend/pipelines/blue_team.py → async SSE generator run_blue_team, wires LLM → GitHub PR, full error handling at every step, grep checks passed ✅
+- backend/pipelines/blue_team.py → async SSE generator run_blue_team, wires LLM → GitHub PR, full error handling ✅
+- backend/pipelines/red_team.py → async SSE generator run_red_team, orchestrates all 5 tool runners (nuclei → httpx → katana → gitleaks → bandit), per-tool fallback from cache, grep checks passed ✅
 
 ## Next File
-(Waiting for next Phase 2 instruction — likely FastAPI routes or remaining tool runners)
+- 4 remaining tool runner stubs needed: gitleaks_runner.py, bandit_runner.py, httpx_runner.py, katana_runner.py (red_team.py imports them)
+- Then FastAPI routes
 
 ## Errors Hit and Fixed
 - Phase 1: venv creation failed (python3.12-venv missing), push protection blocked Stripe key, nuclei v3.3.7 image not found (used v3.3.8), docker network name mismatch (scar_scar-net)
