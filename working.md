@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T23:46:38Z
+Last updated: 2026-04-04T23:49:53Z
 
 ## Session Info
 Device: Linux Mint (Phase 2)
@@ -25,13 +25,14 @@ Model: Claude Opus 4.6 (Thinking)
 ## Completed and Verified — Phase 2
 - backend/services/__init__.py → Package init ✅
 - backend/services/llm_client.py → async analyze_findings + health_check, OpenRouter via openai SDK, fallback handling, grep checks passed ✅
+- backend/services/github_service.py → async create_patch_pr + health_check, PyGithub via run_in_executor, branch naming scar-patch-{timestamp}, error fallback, grep checks passed ✅
 
 ## Next File
-(Waiting for next Phase 2 instruction — remaining tool runners or FastAPI routes)
+(Waiting for next Phase 2 instruction — likely FastAPI routes or remaining tool runners)
 
 ## Errors Hit and Fixed
 - Phase 1: venv creation failed (python3.12-venv missing), push protection blocked Stripe key, nuclei v3.3.7 image not found (used v3.3.8), docker network name mismatch (scar_scar-net)
-- Phase 2: grep -n "fallback" failed case-sensitive because variable is FALLBACK_RESPONSE — confirmed present with case-insensitive check
+- Phase 2: grep -n "fallback" failed case-sensitive on llm_client.py because variable is FALLBACK_RESPONSE — confirmed present with case-insensitive check
 
 ## Docker State
 Docker compose is running the prior build. scar-backend needs `docker compose up --build` to pick up the new Dockerfile.
