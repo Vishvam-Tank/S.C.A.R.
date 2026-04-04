@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T23:54:58Z
+Last updated: 2026-04-04T23:57:45Z
 
 ## Session Info
 Device: Linux Mint (Phase 2)
@@ -28,11 +28,14 @@ Model: Claude Opus 4.6 (Thinking)
 - backend/services/github_service.py → async create_patch_pr + health_check, PyGithub via run_in_executor, error fallback ✅
 - backend/pipelines/__init__.py → Package init ✅
 - backend/pipelines/blue_team.py → async SSE generator run_blue_team, wires LLM → GitHub PR, full error handling ✅
-- backend/pipelines/red_team.py → async SSE generator run_red_team, orchestrates all 5 tool runners (nuclei → httpx → katana → gitleaks → bandit), per-tool fallback from cache, grep checks passed ✅
+- backend/pipelines/red_team.py → async SSE generator run_red_team, orchestrates all 5 tool runners, per-tool fallback ✅
+- backend/tools/gitleaks_runner.py → async run_gitleaks, writes to /tmp then reads via aiofiles, returns list[dict] ✅
+- backend/tools/bandit_runner.py → async run_bandit, writes to /tmp then reads "results" key via aiofiles, returns list[dict] ✅
+- backend/tools/httpx_runner.py → async run_httpx, streams stdout JSONL line-by-line, returns list[dict] ✅
+- backend/tools/katana_runner.py → async run_katana, streams stdout JSONL line-by-line, returns list[dict] ✅
 
 ## Next File
-- 4 remaining tool runner stubs needed: gitleaks_runner.py, bandit_runner.py, httpx_runner.py, katana_runner.py (red_team.py imports them)
-- Then FastAPI routes
+- FastAPI routes (backend/main.py or backend/app.py)
 
 ## Errors Hit and Fixed
 - Phase 1: venv creation failed (python3.12-venv missing), push protection blocked Stripe key, nuclei v3.3.7 image not found (used v3.3.8), docker network name mismatch (scar_scar-net)
