@@ -1,0 +1,1 @@
+{"template-id":"stripe-live-key-exposed","info":{"name":"Stripe Live API Key Exposed in JS","severity":"critical","tags":["exposure","stripe","keys"]},"type":"http","host":"http://demo-target:5000","matched-at":"http://demo-target:5000/static/bundle.js","timestamp":"2026-04-05T00:00:00.000Z"}

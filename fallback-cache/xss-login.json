@@ -1,0 +1,1 @@
+{"template-id":"reflected-xss-login","info":{"name":"Reflected XSS in Login Endpoint","severity":"high","tags":["xss","reflected"]},"type":"http","host":"http://demo-target:5000","matched-at":"http://demo-target:5000/api/v1/login?username=<script>alert(1)</script>","timestamp":"2026-04-05T00:00:00.000Z"}

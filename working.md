@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T19:32:36Z
+Last updated: 2026-04-04T19:37:36Z
 
 ## Session Info
 Device: Linux Mint (Phase 1)
@@ -14,6 +14,9 @@ Model: Gemini 3.1 Pro (High)
 - nuclei-templates/stripe-key.yaml → Created and tested ✅
 - nuclei-templates/xss-login.yaml → Created and tested ✅
 - nuclei-templates/debug-traceback.yaml → Created and tested ✅
+- fallback-cache/stripe-key.json → Created and verified as valid JSON ✅
+- fallback-cache/xss-login.json → Created and verified as valid JSON ✅
+- fallback-cache/debug-traceback.json → Created and verified as valid JSON ✅
 
 ## Next File
 (Waiting for next instruction on tool runners)
