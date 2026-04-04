@@ -1,0 +1,25 @@
+services:
+  demo-target:
+    build:
+      context: ./scar-demo-target
+    container_name: demo-target
+    ports:
+      - "5000:5000"
+    networks:
+      - scar-net
+    restart: unless-stopped
+
+  backend:
+    image: python:3.11-slim
+    container_name: scar-backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    networks:
+      - scar-net
+    command: tail -f /dev/null
+    restart: unless-stopped
+
+networks:
+  scar-net:
+    driver: bridge
