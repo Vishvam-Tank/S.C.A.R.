@@ -1,0 +1,15 @@
+id: stripe-live-key-exposed
+info:
+  name: Stripe Live API Key Exposed in JS
+  author: scar
+  severity: critical
+  tags: exposure,stripe,keys
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/static/bundle.js"
+    matchers:
+      - type: regex
+        regex:
+          - "sk_live_[a-zA-Z0-9]{20,}"

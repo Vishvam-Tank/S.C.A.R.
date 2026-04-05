@@ -1,0 +1,1 @@
+{"template-id":"flask-debug-traceback","info":{"name":"Flask Debug Mode Traceback Exposed","severity":"medium","tags":["debug","flask","exposure"]},"type":"http","host":"http://demo-target:5000","matched-at":"http://demo-target:5000/api/debug","timestamp":"2026-04-05T00:00:00.000Z"}

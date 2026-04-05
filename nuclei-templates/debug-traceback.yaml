@@ -1,0 +1,16 @@
+id: flask-debug-traceback
+info:
+  name: Flask Debug Mode Traceback Exposed
+  author: scar
+  severity: medium
+  tags: debug,flask,exposure
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/debug"
+    matchers:
+      - type: word
+        words:
+          - "Traceback (most recent call last)"
+        part: body
