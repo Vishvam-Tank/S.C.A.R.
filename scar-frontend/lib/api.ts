@@ -1,7 +1,7 @@
 import type { HealthResponse } from "./types";
 
-// Base API URL for Next.js rewrites (set to /api to leverage proxies)
-const API_BASE = "/api";
+// Use the public API URL (set at build time for Docker)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /** GET /health — check backend, LLM, and GitHub status */
 export async function getHealth(): Promise<HealthResponse> {

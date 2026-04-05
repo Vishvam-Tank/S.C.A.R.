@@ -34,13 +34,15 @@ services:
     build:
       context: ./scar-frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
     container_name: scar-frontend
     ports:
-      - "3000:3000"
+      - "3002:3000"
     networks:
       - scar-net
     environment:
-      - NEXT_PUBLIC_API_BASE=http://scar-backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - scar-backend
     restart: unless-stopped
