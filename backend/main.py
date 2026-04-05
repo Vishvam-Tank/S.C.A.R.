@@ -1,19 +1,21 @@
 import os
 import json
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from dotenv import load_dotenv
 
-from backend.pipelines.red_team import run_red_team
-from backend.pipelines.blue_team import run_blue_team
-from backend.services.llm_client import health_check as llm_health_check
-from backend.services.github_service import health_check as github_health_check
+from pipelines.red_team import run_red_team
+from pipelines.blue_team import run_blue_team
+from services.llm_client import health_check as llm_health_check
+from services.github_service import health_check as github_health_check
 
 load_dotenv()
 
-app = FastAPI(title="SCAR API", version="1.0.0")
+DEFAULT_TARGET = os.getenv("TARGET_URL", "http://demo-target:5000")
+
+app = FastAPI(title="SCAR API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,15 +25,25 @@ app.add_middleware(
 )
 
 
-class ScanRequest(BaseModel):
+# ── Request models ────────────────────────────────────────────────────────────
+
+class RedScanRequest(BaseModel):
+    target: str = DEFAULT_TARGET
+
+class BlueScanRequest(BaseModel):
     findings: list[dict]
 
+class FullScanRequest(BaseModel):
+    target: str = DEFAULT_TARGET
+
+
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.get("/")
 async def root():
     return JSONResponse({
         "name": "SCAR API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "status": "running",
         "endpoints": ["/health", "/scan/red", "/scan/blue", "/scan/full"],
     })
@@ -46,21 +58,21 @@ async def health():
         "llm": llm_ok,
         "github": github_ok,
         "model": os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free"),
-        "target": os.getenv("TARGET_URL", "http://demo-target:5000"),
+        "default_target": DEFAULT_TARGET,
     })
 
 
 @app.post("/scan/red")
-async def scan_red():
+async def scan_red(request: RedScanRequest):
     return StreamingResponse(
-        run_red_team(),
+        run_red_team(request.target),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
 @app.post("/scan/blue")
-async def scan_blue(request: ScanRequest):
+async def scan_blue(request: BlueScanRequest):
     return StreamingResponse(
         run_blue_team(request.findings),
         media_type="text/event-stream",
@@ -69,16 +81,12 @@ async def scan_blue(request: ScanRequest):
 
 
 @app.post("/scan/full")
-async def scan_full():
+async def scan_full(request: FullScanRequest):
     async def _full_pipeline():
         all_findings = []
-
         try:
-            # Phase 1: Red Team — stream all events, capture findings
-            async for sse_line in run_red_team():
+            async for sse_line in run_red_team(request.target):
                 yield sse_line
-
-                # Parse the SSE data line to capture all_findings
                 if sse_line.startswith("data: "):
                     try:
                         payload = json.loads(sse_line[6:].strip())
@@ -87,7 +95,6 @@ async def scan_full():
                     except json.JSONDecodeError:
                         pass
 
-            # Phase 2: Blue Team — feed red team findings into LLM + PR
             async for sse_line in run_blue_team(all_findings):
                 yield sse_line
 
@@ -103,4 +110,4 @@ async def scan_full():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

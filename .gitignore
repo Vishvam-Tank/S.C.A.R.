@@ -6,3 +6,4 @@ __pycache__/
 scar-frontend/node_modules/
 scar-frontend/.next/
 .env.local
+.env.bak

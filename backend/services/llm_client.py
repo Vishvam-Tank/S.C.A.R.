@@ -1,93 +1,141 @@
 import os
 import json
-import logging
-from openai import AsyncOpenAI
+import asyncio
+import aiohttp
 from dotenv import load_dotenv
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
-
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-FALLBACK_RESPONSE = {"patches": [], "error": "LLM response was not valid JSON"}
+# CONFIRMED live for this account — pulled from /api/v1/models April 2026
+FALLBACK_MODELS = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "nousresearch/hermes-3-llama-3.1-405b:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "openai/gpt-oss-120b:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "google/gemma-3-27b-it:free",
+    "google/gemma-3-12b-it:free",
+    "z-ai/glm-4.5-air:free",
+    "openrouter/free",
+]
 
-SYSTEM_PROMPT = (
-    "You are a senior security engineer. Analyze these security "
-    "findings from a Nuclei scan. For each finding, provide:\n"
-    "1. A plain-English explanation of the vulnerability\n"
-    "2. The exact severity level\n"
-    "3. A concrete code patch to fix it\n"
-    "Return a valid JSON object with key 'patches' containing "
-    "a list. Each item must have: "
-    "finding_id (str), explanation (str), severity (str), patch (str)"
-)
-
-
-def _get_client() -> AsyncOpenAI:
-    return AsyncOpenAI(
-        api_key=OPENROUTER_API_KEY,
-        base_url=OPENROUTER_BASE_URL,
-        default_headers={
-            "HTTP-Referer": "scar-mvp",
-            "X-Title": "SCAR",
-        },
-    )
+HEADERS = {
+    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+    "Content-Type": "application/json",
+    "HTTP-Referer": "http://localhost:3000",
+    "X-Title": "SCAR Security Scanner",
+}
 
 
-async def analyze_findings(findings: list[dict]) -> dict:
-    """Send Nuclei findings to the LLM and return structured patches."""
-    try:
-        client = _get_client()
-
-        user_prompt = (
-            "Analyze the following Nuclei scan findings and return "
-            "your response as a valid JSON object:\n\n"
-            + json.dumps(findings, indent=2)
-        )
-
-        response = await client.chat.completions.create(
-            model=OPENROUTER_MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.2,
-        )
-
-        content = response.choices[0].message.content.strip()
-
-        try:
-            result = json.loads(content)
-            return result
-        except json.JSONDecodeError:
-            logger.error("LLM response was not valid JSON: %s", content[:200])
-            return dict(FALLBACK_RESPONSE)
-
-    except Exception as exc:
-        logger.error("OpenRouter API call failed: %s", exc)
-        return dict(FALLBACK_RESPONSE)
+async def chat_completion(messages: list[dict], temperature: float = 0.2) -> str:
+    last_error = "No models attempted"
+    async with aiohttp.ClientSession() as session:
+        for model in FALLBACK_MODELS:
+            payload = {
+                "model": model,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": 4096,
+            }
+            try:
+                async with session.post(
+                    f"{OPENROUTER_BASE_URL}/chat/completions",
+                    headers=HEADERS,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=90),
+                ) as resp:
+                    body = await resp.text()
+                    if resp.status == 200:
+                        data = json.loads(body)
+                        content = data["choices"][0]["message"]["content"]
+                        if content and content.strip():
+                            print(f"[LLM] SUCCESS: {model}", flush=True)
+                            return content.strip()
+                        last_error = f"{model} returned empty content"
+                        continue
+                    if resp.status in (404, 400, 503):
+                        print(f"[LLM] {model} -> {resp.status}, skipping", flush=True)
+                        last_error = f"HTTP {resp.status} on {model}"
+                        continue
+                    if resp.status == 429:
+                        print(f"[LLM] {model} -> 429 rate limit, skipping", flush=True)
+                        last_error = f"429 on {model}"
+                        continue
+                    last_error = f"HTTP {resp.status} on {model}: {body[:200]}"
+                    continue
+            except asyncio.TimeoutError:
+                print(f"[LLM] {model} timed out, skipping", flush=True)
+                last_error = f"Timeout on {model}"
+                continue
+            except aiohttp.ClientError as e:
+                last_error = f"Network error on {model}: {e}"
+                continue
+    raise RuntimeError(f"All models failed. Last error: {last_error}")
 
 
 async def health_check() -> bool:
-    """Ping the LLM with a minimal message; return True if it replies ok."""
     try:
-        client = _get_client()
-
-        response = await client.chat.completions.create(
-            model=OPENROUTER_MODEL,
-            messages=[
-                {"role": "user", "content": "Reply with: ok"},
-            ],
-            temperature=0,
-            max_tokens=10,
+        result = await chat_completion(
+            [{"role": "user", "content": "Reply with the single word: ok"}],
+            temperature=0.0,
         )
-
-        content = response.choices[0].message.content.strip().lower()
-        return "ok" in content
-
-    except Exception as exc:
-        logger.error("Health check failed: %s", exc)
+        return bool(result)
+    except Exception as e:
+        print(f"[LLM] health_check failed: {e}", flush=True)
         return False
+
+
+async def analyze_findings(findings: list[dict]) -> dict:
+    if not findings:
+        return {"patches": [], "summary": "No findings to analyze."}
+
+    findings_text = json.dumps(findings, indent=2)
+
+    system_prompt = """You are a senior application security engineer.
+You will receive a list of security findings from automated scanners.
+For each finding, produce a concrete code patch to fix it.
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "summary": "brief overall risk summary",
+  "patches": [
+    {
+      "finding_id": "template-id from finding",
+      "severity": "critical|high|medium|low",
+      "title": "short title",
+      "explanation": "why this is dangerous",
+      "file": "relative path to file to fix",
+      "patch": "the exact fixed code to write to that file"
+    }
+  ]
+}
+
+Do not include markdown, backticks, or any text outside the JSON object."""
+
+    response = await chat_completion(
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Analyze these security findings and produce patches:\n\n{findings_text}"},
+        ],
+        temperature=0.1,
+    )
+
+    cleaned = response.strip()
+    if cleaned.startswith("```"):
+        parts = cleaned.split("```")
+        cleaned = parts[1] if len(parts) > 1 else parts[0]
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+    cleaned = cleaned.strip()
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}") + 1
+        if start >= 0 and end > start:
+            return json.loads(cleaned[start:end])
+        raise RuntimeError(f"LLM returned non-JSON: {cleaned[:300]}")
