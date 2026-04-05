@@ -28,6 +28,21 @@ services:
       - demo-target
     restart: unless-stopped
 
+  scar-frontend:
+    build:
+      context: ./scar-frontend
+      dockerfile: Dockerfile
+    container_name: scar-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - scar-net
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://scar-backend:8000
+    depends_on:
+      - scar-backend
+    restart: unless-stopped
+
 networks:
   scar-net:
     driver: bridge

@@ -1,7 +1,7 @@
 import type { HealthResponse } from "./types";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+// Base API URL for Next.js rewrites (set to /api to leverage proxies)
+const API_BASE = "/api";
 
 /** GET /health — check backend, LLM, and GitHub status */
 export async function getHealth(): Promise<HealthResponse> {
