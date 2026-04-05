@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .env
 *.egg-info/
+scar-frontend/node_modules/
+scar-frontend/.next/
+.env.local
