@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ScanPhase } from "@/lib/types";
 
 interface ScanFormProps {
@@ -13,8 +13,55 @@ export function ScanForm({ onScan, onReset, phase }: ScanFormProps) {
   const [target, setTarget] = useState("http://demo-target:5000");
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // ── Scan timer ──────────────────────────────────────────────
+  const [elapsed, setElapsed] = useState(0);
+  const [finalTime, setFinalTime] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const isRunning = phase === "red" || phase === "blue";
   const showReset = phase === "done" || phase === "error";
+
+  // Start timer when scan begins
+  useEffect(() => {
+    if (isRunning && !timerRef.current) {
+      setElapsed(0);
+      setFinalTime(null);
+      const start = Date.now();
+      timerRef.current = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - start) / 1000));
+      }, 100);
+    }
+
+    if (!isRunning && timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+      if (phase === "done" || phase === "error") {
+        setFinalTime(elapsed);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRunning, phase]);
+
+  // Reset timer when phase goes idle
+  useEffect(() => {
+    if (phase === "idle") {
+      setElapsed(0);
+      setFinalTime(null);
+    }
+  }, [phase]);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const isValid = target.trim().startsWith("http://") || target.trim().startsWith("https://");
 
@@ -35,7 +82,7 @@ export function ScanForm({ onScan, onReset, phase }: ScanFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
-      <div className="flex gap-4">
+      <div className="flex gap-4 items-center">
         <div className="flex-1 relative">
           <input
             type="text"
@@ -68,6 +115,18 @@ export function ScanForm({ onScan, onReset, phase }: ScanFormProps) {
           >
             Reset
           </button>
+        )}
+
+        {/* Scan timer */}
+        {isRunning && (
+          <span className="text-sm font-mono text-[#888888] whitespace-nowrap animate-pulse">
+            ⏱ {formatTime(elapsed)}
+          </span>
+        )}
+        {finalTime !== null && !isRunning && (
+          <span className="text-sm font-mono text-[#22c55e] whitespace-nowrap">
+            ✅ Done in {formatTime(finalTime)}
+          </span>
         )}
       </div>
       {validationError && (

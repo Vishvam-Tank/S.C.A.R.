@@ -17,19 +17,22 @@ async def run_httpx(target_url: str) -> list[dict]:
 
         results = []
 
-        while True:
-            line = await process.stdout.readline()
-            if not line:
-                break
-            line_str = line.decode("utf-8").strip()
-            if line_str:
-                try:
-                    parsed = json.loads(line_str)
-                    results.append(parsed)
-                except json.JSONDecodeError:
-                    pass
+        try:
+            stdout, _ = await asyncio.wait_for(
+                process.communicate(), timeout=8
+            )
+            for line_str in stdout.decode("utf-8").splitlines():
+                line_str = line_str.strip()
+                if line_str:
+                    try:
+                        parsed = json.loads(line_str)
+                        results.append(parsed)
+                    except json.JSONDecodeError:
+                        pass
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.wait()
 
-        await process.wait()
         return results
 
     except Exception:

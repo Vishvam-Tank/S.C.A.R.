@@ -15,7 +15,13 @@ async def run_bandit(scan_path: str) -> list[dict]:
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
         )
-        await process.wait()
+
+        try:
+            await asyncio.wait_for(process.wait(), timeout=8)
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.wait()
+            return []
 
         async with aiofiles.open("/tmp/bandit_out.json", mode="r") as f:
             content = await f.read()
