@@ -1,5 +1,5 @@
 # SCAR Working Memory
-Last updated: 2026-04-04T23:57:45Z
+Last updated: 2026-04-04T23:59:49Z
 
 ## Session Info
 Device: Linux Mint (Phase 2)
@@ -24,25 +24,28 @@ Model: Claude Opus 4.6 (Thinking)
 
 ## Completed and Verified — Phase 2
 - backend/services/__init__.py → Package init ✅
-- backend/services/llm_client.py → async analyze_findings + health_check, OpenRouter via openai SDK, fallback handling ✅
-- backend/services/github_service.py → async create_patch_pr + health_check, PyGithub via run_in_executor, error fallback ✅
+- backend/services/llm_client.py → async analyze_findings + health_check ✅
+- backend/services/github_service.py → async create_patch_pr + health_check ✅
 - backend/pipelines/__init__.py → Package init ✅
-- backend/pipelines/blue_team.py → async SSE generator run_blue_team, wires LLM → GitHub PR, full error handling ✅
-- backend/pipelines/red_team.py → async SSE generator run_red_team, orchestrates all 5 tool runners, per-tool fallback ✅
-- backend/tools/gitleaks_runner.py → async run_gitleaks, writes to /tmp then reads via aiofiles, returns list[dict] ✅
-- backend/tools/bandit_runner.py → async run_bandit, writes to /tmp then reads "results" key via aiofiles, returns list[dict] ✅
-- backend/tools/httpx_runner.py → async run_httpx, streams stdout JSONL line-by-line, returns list[dict] ✅
-- backend/tools/katana_runner.py → async run_katana, streams stdout JSONL line-by-line, returns list[dict] ✅
+- backend/pipelines/blue_team.py → async SSE generator run_blue_team ✅
+- backend/pipelines/red_team.py → async SSE generator run_red_team ✅
+- backend/tools/gitleaks_runner.py → async run_gitleaks ✅
+- backend/tools/bandit_runner.py → async run_bandit ✅
+- backend/tools/httpx_runner.py → async run_httpx ✅
+- backend/tools/katana_runner.py → async run_katana ✅
+- backend/main.py → FastAPI app with CORS, 5 endpoints (/, /health, /scan/red, /scan/blue, /scan/full), SSE streaming, uvicorn entrypoint ✅
 
-## Next File
-- FastAPI routes (backend/main.py or backend/app.py)
+## Next Steps
+- Update docker-compose.yml command for scar-backend to run uvicorn
+- docker compose up --build and test endpoints via curl
+- Then Phase 3: Next.js frontend
 
 ## Errors Hit and Fixed
 - Phase 1: venv creation failed (python3.12-venv missing), push protection blocked Stripe key, nuclei v3.3.7 image not found (used v3.3.8), docker network name mismatch (scar_scar-net)
-- Phase 2: grep -n "fallback" failed case-sensitive on llm_client.py because variable is FALLBACK_RESPONSE — confirmed present with case-insensitive check
+- Phase 2: grep -n "fallback" failed case-sensitive on llm_client.py because variable is FALLBACK_RESPONSE
 
 ## Docker State
-Docker compose is running the prior build. scar-backend needs `docker compose up --build` to pick up the new Dockerfile.
+Docker compose is running the prior build. scar-backend needs `docker compose up --build` to pick up the new Dockerfile + main.py.
 
 ## Nuclei Test State
 3 findings returned (Phase 1 verified):
