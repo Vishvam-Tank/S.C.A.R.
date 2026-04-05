@@ -11,7 +11,9 @@ from pipelines.blue_team import run_blue_team
 from services.llm_client import health_check as llm_health_check
 from services.github_service import health_check as github_health_check
 
-load_dotenv()
+load_dotenv(dotenv_path="/run/secrets/.env", override=False)
+load_dotenv(override=False)  # fallback to any .env in PATH
+
 
 DEFAULT_TARGET = os.getenv("TARGET_URL", "http://demo-target:5000")
 

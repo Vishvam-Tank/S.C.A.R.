@@ -24,6 +24,8 @@ services:
       - ./backend:/app
       - ./nuclei-templates:/app/nuclei-templates
       - ./fallback-cache:/app/fallback-cache
+      - ./.env:/app/.env:ro
+
     depends_on:
       - demo-target
     restart: unless-stopped
