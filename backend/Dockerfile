@@ -1,18 +1,22 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y wget unzip curl git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget unzip curl git && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.3.7/nuclei_3.3.7_linux_amd64.zip && \
     unzip nuclei_3.3.7_linux_amd64.zip && \
     mv nuclei /usr/local/bin/ && \
     chmod +x /usr/local/bin/nuclei && \
-    rm nuclei_3.3.7_linux_amd64.zip && \
-    wget https://github.com/projectdiscovery/httpx/releases/download/v1.6.10/httpx_1.6.10_linux_amd64.zip && \
-    unzip httpx_1.6.10_linux_amd64.zip && \
+    rm nuclei_3.3.7_linux_amd64.zip
+
+RUN wget https://github.com/projectdiscovery/httpx/releases/download/v1.6.3/httpx_1.6.3_linux_amd64.zip && \
+    unzip httpx_1.6.3_linux_amd64.zip && \
     mv httpx /usr/local/bin/ && \
     chmod +x /usr/local/bin/httpx && \
-    rm httpx_1.6.10_linux_amd64.zip && \
-    wget https://github.com/projectdiscovery/katana/releases/download/v1.1.0/katana_1.1.0_linux_amd64.zip && \
+    rm httpx_1.6.3_linux_amd64.zip
+
+RUN wget https://github.com/projectdiscovery/katana/releases/download/v1.1.0/katana_1.1.0_linux_amd64.zip && \
     unzip katana_1.1.0_linux_amd64.zip && \
     mv katana /usr/local/bin/ && \
     chmod +x /usr/local/bin/katana && \
