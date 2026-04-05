@@ -1,9 +1,11 @@
-scar-demo-target/venv/
-__pycache__/
-*.pyc
 .env
-*.egg-info/
-scar-frontend/node_modules/
-scar-frontend/.next/
 .env.local
 .env.bak
+scar-frontend/.env.local
+scar-frontend/node_modules/
+scar-frontend/.next/
+__pycache__/
+*.pyc
+.DS_Store
+scar-demo-target/venv/
+*.egg-info/
