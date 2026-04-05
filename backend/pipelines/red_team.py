@@ -5,17 +5,16 @@ from typing import AsyncGenerator
 import aiofiles
 from dotenv import load_dotenv
 
-from backend.tools.nuclei_runner import run_nuclei
-from backend.tools.gitleaks_runner import run_gitleaks
-from backend.tools.bandit_runner import run_bandit
-from backend.tools.httpx_runner import run_httpx
-from backend.tools.katana_runner import run_katana
+from tools.nuclei_runner import run_nuclei
+from tools.gitleaks_runner import run_gitleaks
+from tools.bandit_runner import run_bandit
+from tools.httpx_runner import run_httpx
+from tools.katana_runner import run_katana
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-TARGET_URL = os.getenv("TARGET_URL", "http://demo-target:5000")
 FALLBACK_CACHE_DIR = os.getenv("FALLBACK_CACHE_DIR", "/app/fallback-cache")
 
 
@@ -36,8 +35,11 @@ async def _load_fallback(tool_name: str) -> list[dict]:
         return []
 
 
-async def run_red_team() -> AsyncGenerator[str, None]:
+async def run_red_team(target: str = None) -> AsyncGenerator[str, None]:
     """SSE generator that orchestrates all 5 security tool runners."""
+
+    if target is None:
+        target = os.getenv("TARGET_URL", "http://demo-target:5000")
 
     def _sse(payload: dict) -> str:
         return f"data: {json.dumps(payload)}\n\n"
@@ -45,9 +47,9 @@ async def run_red_team() -> AsyncGenerator[str, None]:
     all_findings = []
 
     tools = [
-        ("nuclei",   lambda: run_nuclei(TARGET_URL)),
-        ("httpx",    lambda: run_httpx(TARGET_URL)),
-        ("katana",   lambda: run_katana(TARGET_URL)),
+        ("nuclei",   lambda: run_nuclei(target)),
+        ("httpx",    lambda: run_httpx(target)),
+        ("katana",   lambda: run_katana(target)),
         ("gitleaks", lambda: run_gitleaks("/app")),
         ("bandit",   lambda: run_bandit("/app")),
     ]
@@ -56,7 +58,7 @@ async def run_red_team() -> AsyncGenerator[str, None]:
         # Step 1 — status
         yield _sse({
             "type": "status",
-            "message": "🔴 Red Team started. Running security tools...",
+            "message": f"🔴 Red Team started. Target: {target}",
         })
 
         # Step 2 — run each tool
